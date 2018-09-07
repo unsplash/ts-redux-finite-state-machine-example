@@ -4,7 +4,7 @@ import { createTaggedVariant } from './typescript-helpers';
 export enum StateType {
     Form = 'Form',
     Loading = 'Loading',
-    Failure = 'Failure',
+    Failed = 'Failed',
     Gallery = 'Gallery',
 }
 
@@ -17,8 +17,8 @@ export const loading = ({ query }: { query: string }) =>
     });
 type Loading = ReturnType<typeof loading>;
 
-export const failure = () => createTaggedVariant(StateType.Failure, {});
-type Failure = ReturnType<typeof failure>;
+export const failed = () => createTaggedVariant(StateType.Failed, {});
+type Failed = ReturnType<typeof failed>;
 
 export const gallery = ({ items }: { items: GalleryItem[] }) =>
     createTaggedVariant(StateType.Gallery, {
@@ -26,4 +26,4 @@ export const gallery = ({ items }: { items: GalleryItem[] }) =>
     });
 type Gallery = ReturnType<typeof gallery>;
 
-export type State = Form | Loading | Failure | Gallery;
+export type State = Form | Loading | Failed | Gallery;

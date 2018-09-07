@@ -1,12 +1,12 @@
-interface TaggedVariant<T extends string, P> {
+interface TaggedVariant<T extends string, V> {
     type: T;
-    payload: P;
+    value: V;
 }
 
-export const createTaggedVariant = <T extends string, P>(
+export const createTaggedVariant = <T extends string, V>(
     type: T,
-    payload: P,
-): TaggedVariant<T, P> => ({
+    value: V,
+): TaggedVariant<T, V> => ({
     type,
-    payload,
+    value,
 });

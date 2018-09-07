@@ -1,10 +1,21 @@
 import * as actions from './actions';
+import { render } from './render';
 import { configureAndCreateStore } from './store';
 
 const example = () => {
     const store = configureAndCreateStore();
 
-    console.log('Initial state', store.getState());
+    const renderWithState = () => {
+        const state = store.getState();
+
+        const renderResult = render(state);
+        console.log({ renderResult });
+    };
+
+    renderWithState();
+    store.subscribe(renderWithState);
+
+    // Simulate actions
 
     store.dispatch(actions.search({ query: 'dogs' }));
 
