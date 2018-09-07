@@ -2,23 +2,23 @@
 
 At the core of state machines is the following function:
 
-```
-(state, action) => newState
+```ts
+(state: State, action: Action) => State;
 ```
 
 If you're familiar with [Redux](https://redux.js.org/), that might look familiar to you. Redux is a state machine! A Redux [reducer](https://redux.js.org/basics/reducers) function describes how the machine should [_transition_](https://statecharts.github.io/glossary/transition.html), given the previous state and an [action](https://redux.js.org/basics/actions) (aka an [event](https://statecharts.github.io/glossary/event.html) in [statechart] terminology), to the next state.
 
-This article is interested in how we can utilise Redux to write a strongly-typed _finite_-state machine, in the interests of code correctness and readability. By _finite_, we mean that the machine may only be in one of a finite number of states at any given time. By strongly-typed, we mean that the states and actions should carry the types of their parameters, and these parameters should only be accessible when we've narrowed the union of states or actions to a single variant.
+This article is interested in how we can utilise Redux to write a _strongly-typed_ _finite_-state machine, in the interests of code correctness and readability. By _finite_, we mean that the machine may only be in one of a finite number of states at any given time. By _strongly-typed_, we mean that the states and actions should carry the types of their parameters, and these parameters should only be accessible when we've narrowed the union of states or actions to a single variant.
 
 The examples in this article are [available on GitHub](https://github.com/unsplash/ts-redux-finite-state-machine-example).
 
 ## Setting the scene
 
-Throughout this article we will use the example of a simple photo gallery. The application starts in a _form_ state, where the user may enter a query. Upon form submission the _search_ event is triggered, and the application should transition into a _loading_ state. When request either fails or succeeds, corresponding events _search failure_ and _search success_ are triggered the application should transition into the _failure_ or _succeed_ states, respectively. We can represent this as a [statechart] diagram:
+Throughout this article we will use the example of a simple photo gallery. The application starts in a `Form` state, where the user may enter a query. Upon form submission the `Search` event is triggered, and the application should transition into a `Loading` state. When request either fails or succeeds, corresponding events `SearchFailure` and `SearchSuccess` are triggered the application should transition into the `Failed` or `Success` states, respectively. We can represent this as a [statechart] diagram:
 
 ![](./statechart.png)
 
-Generated via https://musing-rosalind-2ce8e7.netlify.com/?machine=%7B%22initial%22%3A%22form%22%2C%22states%22%3A%7B%22form%22%3A%7B%22on%22%3A%7B%22SEARCH%22%3A%22loading%22%7D%7D%2C%22loading%22%3A%7B%22on%22%3A%7B%22SEARCH_SUCCESS%22%3A%7B%22gallery%22%3A%7B%7D%7D%2C%22SEARCH_FAILURE%22%3A%22error%22%7D%7D%2C%22error%22%3A%7B%22on%22%3A%7B%22SEARCH%22%3A%22loading%22%7D%7D%2C%22gallery%22%3A%7B%22on%22%3A%7B%22SEARCH%22%3A%22loading%22%7D%7D%7D%7D
+(Generated via https://musing-rosalind-2ce8e7.netlify.com/?machine=%7B%22initial%22%3A%22Form%22%2C%22states%22%3A%7B%22Form%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%2C%22Loading%22%3A%7B%22on%22%3A%7B%22SearchSuccess%22%3A%7B%22Gallery%22%3A%7B%7D%7D%2C%22SearchFailure%22%3A%22Failed%22%7D%7D%2C%22Failed%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%2C%22Gallery%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%7D%7D.)
 
 ## Intro
 
@@ -33,17 +33,17 @@ We'll also need a helper for defining our `State` and `Action` types, which are 
 
 ```ts
 // typescript-helpers.ts
-interface TaggedVariant<T extends string, P> {
+interface TaggedVariant<T extends string, V> {
     type: T;
-    payload: P;
+    value: V;
 }
 
-export const createTaggedVariant = <T extends string, P>(
+export const createTaggedVariant = <T extends string, V>(
     type: T,
-    payload: P,
-): TaggedVariant<T, P> => ({
+    value: V,
+): TaggedVariant<T, V> => ({
     type,
-    payload,
+    value,
 });
 ```
 
@@ -57,7 +57,7 @@ import { createTaggedVariant } from './typescript-helpers';
 export enum StateType {
     Form = 'Form',
     Loading = 'Loading',
-    Failure = 'Failure',
+    Failed = 'Failed',
     Gallery = 'Gallery',
 }
 
@@ -70,8 +70,8 @@ export const loading = ({ query }: { query: string }) =>
     });
 type Loading = ReturnType<typeof loading>;
 
-export const failure = () => createTaggedVariant(StateType.Failure, {});
-type Failure = ReturnType<typeof failure>;
+export const failed = () => createTaggedVariant(StateType.Failed, {});
+type Failed = ReturnType<typeof failed>;
 
 export const gallery = ({ items }: { items: GalleryItem[] }) =>
     createTaggedVariant(StateType.Gallery, {
@@ -79,8 +79,10 @@ export const gallery = ({ items }: { items: GalleryItem[] }) =>
     });
 type Gallery = ReturnType<typeof gallery>;
 
-export type State = Form | Loading | Failure | Gallery;
+export type State = Form | Loading | Failed | Gallery;
 ```
+
+Note how the `query` parameter is only available in the `Loading` state, and the `items` parameter is only available in the `Gallery` state. By restricting these parameters so that they only exist in their corresponding states, we are making [impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8): the type system only allows us to access the parameters when we are in a state where they can exist.
 
 ## Defining actions
 
@@ -116,9 +118,10 @@ export type Action = Search | SearchFailure | SearchSuccess;
 
 ## Defining transitions
 
-Earlier we saw how Redux's reducer functions allow us to describe our state transitions. We can define which transitions are valid for given states—for example, we don't want to honour the _search failure_ event when we're in a _gallery_ state—as well how the transition should be performed.
+Earlier we saw how Redux's reducer functions allow us to describe our state transitions. As well how the transition should be performed, we can define which transitions are valid for given states. For example, a valid transition would be from a `Loading` state, given a `SearchFailure` event, to the `Failed` state—but the `SearchFailure` event should not cause a transition when we're in the `Form` state.
 
 ```ts
+// reducer.ts
 import { Reducer } from 'redux';
 
 import { Action, ActionType } from './actions';
@@ -133,20 +136,20 @@ export const reducer: Reducer<states.State, Action> = (
     switch (state.type) {
         // For each state, we match each valid event and perform the corresponding state transition.
         case states.StateType.Form:
-        case states.StateType.Failure:
+        case states.StateType.Failed:
         case states.StateType.Gallery:
             switch (action.type) {
                 case ActionType.Search:
-                    return states.loading({ query: action.payload.query });
+                    return states.loading({ query: action.value.query });
                 default:
                     return state;
             }
         case states.StateType.Loading: {
             switch (action.type) {
                 case ActionType.SearchFailure:
-                    return states.failure();
+                    return states.failed();
                 case ActionType.SearchSuccess:
-                    return states.gallery({ items: action.payload.items });
+                    return states.gallery({ items: action.value.items });
                 default:
                     return state;
             }
@@ -160,14 +163,43 @@ export const reducer: Reducer<states.State, Action> = (
 To demonstrate our state machine, we can simulate actions. In a real world application, these would be driven by outside events such as user interactions or HTTP responses.
 
 ```ts
+// render.ts
+import * as states from './states';
+
+export const render = (state: states.State) => {
+    switch (state.type) {
+        case states.StateType.Form:
+            return 'Form';
+        case states.StateType.Loading:
+            return `Loading results for ${state.value.query}`;
+        case states.StateType.Failed:
+            return 'Failed';
+        case states.StateType.Gallery:
+            return `Results: ${state.value.items.length}`;
+    }
+};
+```
+
+```ts
 // index.ts
 import * as actions from './actions';
+import { render } from './render';
 import { configureAndCreateStore } from './store';
 
 const example = () => {
     const store = configureAndCreateStore();
 
-    console.log('Initial state', store.getState());
+    const renderWithState = () => {
+        const state = store.getState();
+
+        const renderResult = render(state);
+        console.log({ renderResult });
+    };
+
+    renderWithState();
+    store.subscribe(renderWithState);
+
+    // Simulate actions
 
     store.dispatch(actions.search({ query: 'dogs' }));
 
@@ -191,18 +223,14 @@ const example = () => {
 example();
 ```
 
-This log shows the initial state and, for each transition, the action and next state.
+This produces the following output in the console:
 
 ```
-Initial state { type: 'Form', payload: {} }
-{ action: { type: 'Search', payload: { query: 'dogs' } },
-  nextState: { type: 'Search', payload: { query: 'dogs' } } }
-{ action: { type: 'SearchSuccess', payload: { items: [Array] } },
-  nextState: { type: 'SearchSuccess', payload: { items: [Array] } } }
-{ action: { type: 'Search', payload: { query: 'cats' } },
-  nextState: { type: 'Search', payload: { query: 'cats' } } }
-{ action: { type: 'SearchFailure', payload: {} },
-  nextState: { type: 'SearchFailure', payload: {} } }
+{ renderResult: 'Form' }
+{ renderResult: 'Loading results for dogs' }
+{ renderResult: 'Results: 2' }
+{ renderResult: 'Loading results for cats' }
+{ renderResult: 'Failed' }
 ```
 
 ## Going further
