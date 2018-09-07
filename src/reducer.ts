@@ -17,7 +17,7 @@ export const reducer: Reducer<states.State, Action> = (state = initialState, act
         Loading: () =>
             Action.match({
                 SearchFailure: () => states.State.Failed({}),
-                SearchSuccess: ({ items }) => states.State.Success({ items }),
+                SearchSuccess: ({ items }) => states.State.Gallery({ items }),
                 default: defaultTransition,
             })(action),
         Failed: () =>
@@ -25,7 +25,7 @@ export const reducer: Reducer<states.State, Action> = (state = initialState, act
                 Search: searchTransition,
                 default: defaultTransition,
             })(action),
-        Success: () =>
+        Gallery: () =>
             Action.match({
                 Search: searchTransition,
                 default: defaultTransition,

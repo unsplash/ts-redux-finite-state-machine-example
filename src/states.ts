@@ -6,6 +6,6 @@ export const State = unionize({
     Form: ofType<{}>(),
     Loading: ofType<{ query: string }>(),
     Failed: ofType<{}>(),
-    Success: ofType<{ items: GalleryItem[] }>(),
+    Gallery: ofType<{ items: GalleryItem[] }>(),
 });
 export type State = UnionOf<typeof State>;
