@@ -6,20 +6,20 @@ const example = () => {
 
     console.log('Initial state', store.getState());
 
-    store.dispatch(actions.search({ query: 'dogs' }));
+    store.dispatch(actions.Action.Search({ query: 'dogs' }));
 
     setTimeout(() => {
         store.dispatch(
-            actions.searchSuccess({
+            actions.Action.SearchSuccess({
                 items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
             }),
         );
 
         setTimeout(() => {
-            store.dispatch(actions.search({ query: 'cats' }));
+            store.dispatch(actions.Action.Search({ query: 'cats' }));
 
             setTimeout(() => {
-                store.dispatch(actions.searchFailure());
+                store.dispatch(actions.Action.SearchFailure());
             }, 1000);
         }, 1000);
     }, 1000);

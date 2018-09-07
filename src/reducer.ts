@@ -1,31 +1,34 @@
 import { Reducer } from 'redux';
 
-import { Action, ActionType } from './actions';
+import { Action, SearchAction } from './actions';
 import * as states from './states';
 
-const initialState: states.State = states.form();
+const initialState: states.State = states.State.Form({});
 
 export const reducer: Reducer<states.State, Action> = (state = initialState, action) => {
-    switch (state.type) {
-        // For each state, we match each valid event and perform the corresponding state transition.
-        case states.StateType.Form:
-        case states.StateType.Failure:
-        case states.StateType.Gallery:
-            switch (action.type) {
-                case ActionType.Search:
-                    return states.loading({ query: action.payload.query });
-                default:
-                    return state;
-            }
-        case states.StateType.Loading: {
-            switch (action.type) {
-                case ActionType.SearchFailure:
-                    return states.failure();
-                case ActionType.SearchSuccess:
-                    return states.gallery({ items: action.payload.items });
-                default:
-                    return state;
-            }
-        }
-    }
+    const defaultTransition = () => state;
+    const searchTransition = ({ query }: SearchAction) => states.State.Loading({ query });
+    return states.State.match({
+        Form: () =>
+            Action.match({
+                Search: searchTransition,
+                default: defaultTransition,
+            })(action),
+        Loading: () =>
+            Action.match({
+                SearchFailure: () => states.State.Failure({}),
+                SearchSuccess: ({ items }) => states.State.Success({ items }),
+                default: defaultTransition,
+            })(action),
+        Failure: () =>
+            Action.match({
+                Search: searchTransition,
+                default: defaultTransition,
+            })(action),
+        Success: () =>
+            Action.match({
+                Search: searchTransition,
+                default: defaultTransition,
+            })(action),
+    })(state);
 };

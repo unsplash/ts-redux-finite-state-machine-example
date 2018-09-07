@@ -10,7 +10,8 @@
   "dependencies": {
     "@types/node-fetch": "^2.1.2",
     "node-fetch": "^2.2.0",
-    "redux": "^4.0.0"
+    "redux": "^4.0.0",
+    "unionize": "^2.1.2"
   },
   "devDependencies": {
     "prettier": "^1.14.2",
