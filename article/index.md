@@ -1,16 +1,20 @@
 # Strongly-typed finite-state machines with Redux and TypeScript
 
+Finite-state machines have been [all](https://www.youtube.com/watch?v=RqTxtOXcv8Y) [the](https://statecharts.github.io/) [rage](https://medium.com/@asolove/pure-ui-control-ac8d1be97a8d) recently. There are [many][xstate] [libraries](https://github.com/MicheleBertoli/react-automata) that allow you to work with finite-state machines. However, I wondered: how far can we get with our existing tools—[Redux] and the [reducer] pattern?
+
+## Reducer is a state machine
+
 At the core of state machines is the following function:
 
 ```ts
 (state: State, action: Action) => State;
 ```
 
-If you're familiar with [Redux](https://redux.js.org/), that might look familiar to you. Redux is a state machine! A Redux [reducer](https://redux.js.org/basics/reducers) function describes how the machine should [_transition_](https://statecharts.github.io/glossary/transition.html), given the previous state and an [action](https://redux.js.org/basics/actions) (aka an [event](https://statecharts.github.io/glossary/event.html) in [statechart] terminology), to the next state.
+If you're familiar with [Redux], that might look familiar to you. A Redux [reducer] function is a state machine! A reducer function describes how the machine should [_transition_](https://statecharts.github.io/glossary/transition.html), given the previous state and an [action] (aka an [event](https://statecharts.github.io/glossary/event.html) in [statechart] terminology), to the next state.
 
 This article is interested in how we can utilise Redux to write a _strongly-typed_ _finite_-state machine, in the interests of code correctness and readability. By _finite_, we mean that the machine may only be in one of a finite number of states at any given time. By _strongly-typed_, we mean that the states and actions should carry the types of their parameters, and these parameters should only be accessible when we've narrowed the union of states or actions to a single variant.
 
-The examples in this article are [available on GitHub](https://github.com/unsplash/ts-redux-finite-state-machine-example).
+The examples in this article are [available on GitHub][example].
 
 ## Setting the scene
 
@@ -49,6 +53,10 @@ export const createTaggedVariant = <T extends string, V>(
 
 ## Defining states
 
+Our `State` type is a tagged union of all the possible state variants.
+
+Note how the `query` parameter is only available in the `Loading` state, and the `items` parameter is only available in the `Gallery` state. By restricting these parameters so that they only exist in their corresponding states, we are making [impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8): the type system only allows us to access the parameters when we are in a state where they can exist.
+
 ```ts
 // states.ts
 import { GalleryItem } from './types';
@@ -82,9 +90,9 @@ type Gallery = ReturnType<typeof gallery>;
 export type State = Form | Loading | Failed | Gallery;
 ```
 
-Note how the `query` parameter is only available in the `Loading` state, and the `items` parameter is only available in the `Gallery` state. By restricting these parameters so that they only exist in their corresponding states, we are making [impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8): the type system only allows us to access the parameters when we are in a state where they can exist.
-
 ## Defining actions
+
+Our `Action` type is a tagged union of all the possible action variants.
 
 ```ts
 // actions.ts
@@ -237,7 +245,7 @@ This produces the following output in the console:
 
 There is much more to state machines than this example demonstrates. However, the simple primitive of a reducer allows for all types of state machines. For example, ["nested state machines"](https://en.wikipedia.org/wiki/UML_state_machine#Hierarchically_nested_states) can simply be modelled as nested reducers. Likewise, ["parallel state machines"](https://statecharts.github.io/glossary/parallel-state.html) are just [combined reducers](https://redux.js.org/recipes/structuringreducers/usingcombinereducers).
 
-Our `Action` and `State` types are known as [tagged union] types. There are much cleaner ways of defining and using tagged union types in TypeScript, but I refrained from using them in this example for simplicity. At Unsplash we tend to use [unionize](https://github.com/pelotom/unionize). For example, here is how we might define the `Action` tagged union type if we were to use unionize:
+Our `Action` and `State` types are known as [tagged union] types. There are much cleaner ways of defining and using tagged union types in TypeScript, but I refrained from using them in this example for simplicity. At Unsplash we tend to use [unionize]. For example, here is how we might define the `Action` tagged union type if we were to use unionize:
 
 ```ts
 // actions.ts
@@ -261,5 +269,15 @@ export type Action = UnionOf<typeof Action>;
 
 A full example using unionize can be seen at https://github.com/unsplash/ts-redux-finite-state-machine-example/tree/unionize.
 
+---
+
+If you like how we do things at Unsplash, consider [joining us](https://medium.com/unsplash/unsplash-is-hiring-3rd-full-stack-engineer-fc883d9ebde3)!
+
 [tagged union]: https://en.wikipedia.org/wiki/Tagged_union
 [statechart]: https://statecharts.github.io/
+[redux]: https://redux.js.org/
+[reducer]: https://redux.js.org/basics/reducers
+[action]: (https://redux.js.org/basics/actions)
+[xstate]: https://github.com/davidkpiano/xstate
+[unionize]: https://github.com/pelotom/unionize
+[example]: https://github.com/unsplash/ts-redux-finite-state-machine-example
