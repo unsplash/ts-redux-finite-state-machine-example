@@ -16,11 +16,11 @@ export const reducer: Reducer<states.State, Action> = (state = initialState, act
             })(action),
         Loading: () =>
             Action.match({
-                SearchFailure: () => states.State.Failure({}),
+                SearchFailure: () => states.State.Failed({}),
                 SearchSuccess: ({ items }) => states.State.Success({ items }),
                 default: defaultTransition,
             })(action),
-        Failure: () =>
+        Failed: () =>
             Action.match({
                 Search: searchTransition,
                 default: defaultTransition,
