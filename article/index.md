@@ -37,7 +37,7 @@ export type GalleryItem = { id: string };
 
 ## Defining states
 
-Our `State` type is a tagged union of all the possible state variants.
+Our `State` type is a tagged union of all the possible state variants. By expressing our state as a union, we're defining which states are valid. Later we'll use these states to define which transitions are valid.
 
 Note how the `query` parameter is only available in the `Loading` state, and the `items` parameter is only available in the `Gallery` state. By restricting these parameters so that they only exist in their corresponding states, we are making [impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8): the type system only allows us to access the parameters when we are in a state where they can exist.
 
