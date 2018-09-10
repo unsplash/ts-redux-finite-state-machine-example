@@ -23,9 +23,11 @@ const example = async () => {
 
     await wait(1000);
 
-    actions.searchSuccess({
-        items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
-    });
+    store.dispatch(
+        actions.searchSuccess({
+            items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
+        }),
+    );
 
     await wait(1000);
 
