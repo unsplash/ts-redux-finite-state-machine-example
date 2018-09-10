@@ -2,7 +2,9 @@ import * as actions from './actions';
 import { render } from './render';
 import { configureAndCreateStore } from './store';
 
-const example = () => {
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+const example = async () => {
     const store = configureAndCreateStore();
 
     const renderWithState = () => {
@@ -19,21 +21,24 @@ const example = () => {
 
     store.dispatch(actions.Action.Search({ query: 'dogs' }));
 
-    setTimeout(() => {
-        store.dispatch(
-            actions.Action.SearchSuccess({
-                items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
-            }),
-        );
+    await wait(1000);
 
-        setTimeout(() => {
-            store.dispatch(actions.Action.Search({ query: 'cats' }));
+    store.dispatch(
+        actions.Action.SearchSuccess({
+            items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
+        }),
+    );
 
-            setTimeout(() => {
-                store.dispatch(actions.Action.SearchFailure());
-            }, 1000);
-        }, 1000);
-    }, 1000);
+    await wait(1000);
+
+    store.dispatch(actions.Action.Search({ query: 'cats' }));
+
+    await wait(1000);
+
+    store.dispatch(actions.Action.SearchFailure());
 };
 
-example();
+example().catch(error => {
+    console.error(error);
+    process.exit(1);
+});
