@@ -5,10 +5,10 @@ export const render = (state: states.State) => {
         case states.StateType.Form:
             return 'Form';
         case states.StateType.Loading:
-            return `Loading results for ${state.value.query}`;
+            return `Loading results for ${state.query}`;
         case states.StateType.Failed:
             return 'Failed';
         case states.StateType.Gallery:
-            return `Results: ${state.value.items.length}`;
+            return `Results: ${state.items.length}`;
     }
 };

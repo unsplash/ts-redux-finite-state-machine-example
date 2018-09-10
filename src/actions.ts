@@ -1,5 +1,4 @@
 import { GalleryItem } from './types';
-import { createTaggedVariant } from './typescript-helpers';
 
 export enum ActionType {
     Search = 'Search',
@@ -7,19 +6,19 @@ export enum ActionType {
     SearchSuccess = 'SearchSuccess',
 }
 
-export const search = ({ query }: { query: string }) =>
-    createTaggedVariant(ActionType.Search, {
-        query,
-    });
-type Search = ReturnType<typeof search>;
+type Search = { type: ActionType.Search; query: string };
+export const search = ({ query }: { query: string }): Search => ({
+    type: ActionType.Search,
+    query,
+});
 
-export const searchFailure = () => createTaggedVariant(ActionType.SearchFailure, {});
-type SearchFailure = ReturnType<typeof searchFailure>;
+type SearchFailure = { type: ActionType.SearchFailure };
+export const searchFailure = (): SearchFailure => ({ type: ActionType.SearchFailure });
 
-export const searchSuccess = ({ items }: { items: GalleryItem[] }) =>
-    createTaggedVariant(ActionType.SearchSuccess, {
-        items,
-    });
-type SearchSuccess = ReturnType<typeof searchSuccess>;
+type SearchSuccess = { type: ActionType.SearchSuccess; items: GalleryItem[] };
+export const searchSuccess = ({ items }: { items: GalleryItem[] }): SearchSuccess => ({
+    type: ActionType.SearchSuccess,
+    items,
+});
 
 export type Action = Search | SearchFailure | SearchSuccess;

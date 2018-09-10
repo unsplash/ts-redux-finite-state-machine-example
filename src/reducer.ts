@@ -13,7 +13,7 @@ export const reducer: Reducer<states.State, Action> = (state = initialState, act
         case states.StateType.Gallery:
             switch (action.type) {
                 case ActionType.Search:
-                    return states.loading({ query: action.value.query });
+                    return states.loading({ query: action.query });
                 default:
                     return state;
             }
@@ -22,7 +22,7 @@ export const reducer: Reducer<states.State, Action> = (state = initialState, act
                 case ActionType.SearchFailure:
                     return states.failed();
                 case ActionType.SearchSuccess:
-                    return states.gallery({ items: action.value.items });
+                    return states.gallery({ items: action.items });
                 default:
                     return state;
             }
