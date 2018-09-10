@@ -1,6 +1,8 @@
 # Strongly-typed finite-state machines with Redux and TypeScript
 
-Finite-state machines have been [all](https://www.youtube.com/watch?v=RqTxtOXcv8Y) [the](https://statecharts.github.io/) [rage](https://medium.com/@asolove/pure-ui-control-ac8d1be97a8d) recently. There are [many][xstate] [libraries](https://github.com/MicheleBertoli/react-automata) that allow you to work with finite-state machines. However, I wondered: how far can we get with our existing tools—[Redux] and the [reducer] pattern?
+Finite-state machines have been [all][david talk] [the](https://statecharts.github.io/) [rage](https://medium.com/@asolove/pure-ui-control-ac8d1be97a8d) recently. There are [many][xstate] [libraries](https://github.com/MicheleBertoli/react-automata) that allow you to work with finite-state machines. However, I wondered: how far can we get with our existing tools—[Redux] and the [reducer] pattern?
+
+Note that this article is not concerned with why finite-state machines are useful. If you're interested in learning about why they are useful, I recommend [David Khourshid]'s talk ["Simplifying Complex UIs with Finite Automata & Statecharts"][david talk].
 
 ## Reducer is a state machine
 
@@ -18,7 +20,7 @@ The examples in this article are [available on GitHub][example].
 
 ## Setting the scene
 
-Throughout this article we will use the example of a simple photo gallery. The application starts in a `Form` state, where the user may enter a query. Upon form submission the `Search` event is triggered, and the application should transition into a `Loading` state. When request either fails or succeeds, corresponding events `SearchFailure` and `SearchSuccess` are triggered the application should transition into the `Failed` or `Success` states, respectively. We can represent this as a [statechart] diagram:
+Throughout this article we will use the example of a simple photo gallery search. The application starts in a `Form` state, where the user may enter a query. Upon form submission the `Search` event is triggered, and the application should transition into a `Loading` state. When request either fails or succeeds, corresponding events `SearchFailure` and `SearchSuccess` are triggered the application should transition into the `Failed` or `Success` states, respectively. We can represent this as a [statechart] diagram:
 
 ![](./statechart.png)
 
@@ -270,3 +272,5 @@ If you like how we do things at Unsplash, consider [joining us](https://medium.c
 [xstate]: https://github.com/davidkpiano/xstate
 [unionize]: https://github.com/pelotom/unionize
 [example]: https://github.com/unsplash/ts-redux-finite-state-machine-example
+[david talk]: https://www.youtube.com/watch?v=RqTxtOXcv8Y
+[david khourshid]: https://twitter.com/DavidKPiano
