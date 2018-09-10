@@ -26,7 +26,7 @@ Throughout this article we will use the example of a simple photo gallery search
 
 (Generated via https://musing-rosalind-2ce8e7.netlify.com/?machine=%7B%22initial%22%3A%22Form%22%2C%22states%22%3A%7B%22Form%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%2C%22Loading%22%3A%7B%22on%22%3A%7B%22SearchSuccess%22%3A%7B%22Gallery%22%3A%7B%7D%7D%2C%22SearchFailure%22%3A%22Failed%22%7D%7D%2C%22Failed%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%2C%22Gallery%22%3A%7B%22on%22%3A%7B%22Search%22%3A%22Loading%22%7D%7D%7D%7D.)
 
-## Intro
+## Prerequisites
 
 To begin we must define some basic types and helpers which we'll need to use later on:
 
@@ -40,6 +40,8 @@ export type GalleryItem = { id: string };
 Our `State` type is a tagged union of all the possible state variants. By expressing our state as a union, we're defining which states are valid. Later we'll use these states to define which transitions are valid.
 
 Note how the `query` parameter is only available in the `Loading` state, and the `items` parameter is only available in the `Gallery` state. By restricting these parameters so that they only exist in their corresponding states, we are making [impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8): the type system only allows us to access the parameters when we are in a state where they can exist.
+
+(Note there are cleaner ways to define tagged unions in TypeScript, but I refrained from using them in this example for simplicity. See [the note at the end](#going-further).)
 
 ```ts
 // states.ts
