@@ -33,24 +33,6 @@ To begin we must define some basic types and helpers which we'll need to use lat
 export type GalleryItem = { id: string };
 ```
 
-We'll also need a helper for defining our `State` and `Action` types, which are known as [tagged union] types.
-
-```ts
-// typescript-helpers.ts
-interface TaggedVariant<T extends string, V> {
-    type: T;
-    value: V;
-}
-
-export const createTaggedVariant = <T extends string, V>(
-    type: T,
-    value: V,
-): TaggedVariant<T, V> => ({
-    type,
-    value,
-});
-```
-
 ## Defining states
 
 Our `State` type is a tagged union of all the possible state variants.
@@ -60,7 +42,6 @@ Note how the `query` parameter is only available in the `Loading` state, and the
 ```ts
 // states.ts
 import { GalleryItem } from './types';
-import { createTaggedVariant } from './typescript-helpers';
 
 export enum StateType {
     Form = 'Form',
@@ -69,23 +50,23 @@ export enum StateType {
     Gallery = 'Gallery',
 }
 
-export const form = () => createTaggedVariant(StateType.Form, {});
-type Form = ReturnType<typeof form>;
+type Form = { type: StateType.Form };
+export const form = (): Form => ({ type: StateType.Form });
 
-export const loading = ({ query }: { query: string }) =>
-    createTaggedVariant(StateType.Loading, {
-        query,
-    });
-type Loading = ReturnType<typeof loading>;
+type Loading = { type: StateType.Loading; query: string };
+export const loading = ({ query }: { query: string }): Loading => ({
+    type: StateType.Loading,
+    query,
+});
 
-export const failed = () => createTaggedVariant(StateType.Failed, {});
-type Failed = ReturnType<typeof failed>;
+type Failed = { type: StateType.Failed };
+export const failed = (): Failed => ({ type: StateType.Failed });
 
-export const gallery = ({ items }: { items: GalleryItem[] }) =>
-    createTaggedVariant(StateType.Gallery, {
-        items,
-    });
-type Gallery = ReturnType<typeof gallery>;
+type Gallery = { type: StateType.Gallery; items: GalleryItem[] };
+export const gallery = ({ items }: { items: GalleryItem[] }): Gallery => ({
+    type: StateType.Gallery,
+    items,
+});
 
 export type State = Form | Loading | Failed | Gallery;
 ```
@@ -97,7 +78,6 @@ Our `Action` type is a tagged union of all the possible action variants.
 ```ts
 // actions.ts
 import { GalleryItem } from './types';
-import { createTaggedVariant } from './typescript-helpers';
 
 export enum ActionType {
     Search = 'Search',
@@ -105,21 +85,26 @@ export enum ActionType {
     SearchSuccess = 'SearchSuccess',
 }
 
-export const search = ({ query }: { query: string }) =>
-    createTaggedVariant(ActionType.Search, {
-        query,
-    });
-type Search = ReturnType<typeof search>;
+type Search = { type: ActionType.Search; query: string };
+export const search = ({ query }: { query: string }): Search => ({
+    type: ActionType.Search,
+    query,
+});
 
-export const searchFailure = () =>
-    createTaggedVariant(ActionType.SearchFailure, {});
-type SearchFailure = ReturnType<typeof searchFailure>;
+type SearchFailure = { type: ActionType.SearchFailure };
+export const searchFailure = (): SearchFailure => ({
+    type: ActionType.SearchFailure,
+});
 
-export const searchSuccess = ({ items }: { items: GalleryItem[] }) =>
-    createTaggedVariant(ActionType.SearchSuccess, {
-        items,
-    });
-type SearchSuccess = ReturnType<typeof searchSuccess>;
+type SearchSuccess = { type: ActionType.SearchSuccess; items: GalleryItem[] };
+export const searchSuccess = ({
+    items,
+}: {
+    items: GalleryItem[];
+}): SearchSuccess => ({
+    type: ActionType.SearchSuccess,
+    items,
+});
 
 export type Action = Search | SearchFailure | SearchSuccess;
 ```
@@ -148,7 +133,7 @@ export const reducer: Reducer<states.State, Action> = (
         case states.StateType.Gallery:
             switch (action.type) {
                 case ActionType.Search:
-                    return states.loading({ query: action.value.query });
+                    return states.loading({ query: action.query });
                 default:
                     return state;
             }
@@ -157,7 +142,7 @@ export const reducer: Reducer<states.State, Action> = (
                 case ActionType.SearchFailure:
                     return states.failed();
                 case ActionType.SearchSuccess:
-                    return states.gallery({ items: action.value.items });
+                    return states.gallery({ items: action.items });
                 default:
                     return state;
             }
@@ -179,11 +164,11 @@ export const render = (state: states.State) => {
         case states.StateType.Form:
             return 'Form';
         case states.StateType.Loading:
-            return `Loading results for ${state.value.query}`;
+            return `Loading results for ${state.query}`;
         case states.StateType.Failed:
             return 'Failed';
         case states.StateType.Gallery:
-            return `Results: ${state.value.items.length}`;
+            return `Results: ${state.items.length}`;
     }
 };
 ```
@@ -194,7 +179,10 @@ import * as actions from './actions';
 import { render } from './render';
 import { configureAndCreateStore } from './store';
 
-const example = () => {
+const wait = (ms: number) =>
+    new Promise<void>(resolve => setTimeout(resolve, ms));
+
+const example = async () => {
     const store = configureAndCreateStore();
 
     const renderWithState = () => {
@@ -211,24 +199,25 @@ const example = () => {
 
     store.dispatch(actions.search({ query: 'dogs' }));
 
-    setTimeout(() => {
-        store.dispatch(
-            actions.searchSuccess({
-                items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
-            }),
-        );
+    await wait(1000);
 
-        setTimeout(() => {
-            store.dispatch(actions.search({ query: 'cats' }));
+    actions.searchSuccess({
+        items: [{ id: 'english-setter' }, { id: 'irish-setter' }],
+    });
 
-            setTimeout(() => {
-                store.dispatch(actions.searchFailure());
-            }, 1000);
-        }, 1000);
-    }, 1000);
+    await wait(1000);
+
+    store.dispatch(actions.search({ query: 'cats' }));
+
+    await wait(1000);
+
+    store.dispatch(actions.searchFailure());
 };
 
-example();
+example().catch(error => {
+    console.error(error);
+    process.exit(1);
+});
 ```
 
 This produces the following output in the console:
